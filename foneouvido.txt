@@ -1,0 +1,164 @@
+package br.com.savecontroladoria.intervalofone;
+
+import android.app.PendingIntent;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.session.MediaSession;
+import android.os.Build;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.text.Html;
+import android.text.InputType;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.TimePicker;
+import android.widget.Toast;
+
+public class MainActivity extends AppCompatActivity {
+    private EditText timeIntervalo;
+    private Button btnAtivar;
+    //Access to audio service
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+
+        TextView tvManual = (TextView) findViewById(R.id.tvManual);
+        timeIntervalo = (EditText) findViewById(R.id.timeIntervalo);
+        timeIntervalo.setInputType(InputType.TYPE_CLASS_NUMBER);
+        btnAtivar = (Button) findViewById(R.id.btnAtivar);
+
+        tvManual.setTextSize(12);
+        if (Build.VERSION.SDK_INT >= 24) {
+            tvManual.setText(Html.fromHtml("<font size=\"2\"><b>Manual<o:p></o:p></b></p><p class=MsoNormal>Esse aplicativo medir o intervalo do treino." +
+                    "<BR>\n" +
+                    "Se clicar no botão de bloqueio de tela inicia a contagem conforme tempo informano no menu intervalo.\n" +
+                    "Ao final do tempo informado. Um bip é dado no fone de ouvido e o celular vibra 1 vez.\n" +
+                    "PONTO FINAL. É só isso que precisava e criei. Ahhh...mas tem como selecionar os treinos....medir calorias...passos...gps..." +
+                    "tem outros aplicativos execelentes no google play. Esse criei somente para fazer essa funcionalidade que não encontrei. " +
+                    "Queria medir meus 40 segundos de intervalo, mas eu que queria acionar a contagem. " +
+                    "Não sou um robô e dependendo do dia/exercicio queria ter um tempo maior ou menor para acionar os 40 segundos. " +
+                    "Só isso."
+                    , 0));
+        } else {
+            tvManual.setText(Html.fromHtml("<font size=\"2\"><b>Manual<o:p></o:p></b></p><p class=MsoNormal>Esse aplicativo medir o intervalo do treino." +
+                    "<BR>\n" +
+                    "Se clicar no botão de bloqueio inicia a contagem conforme tempo informano no menu intervalo.\n" +
+                    "Ao final do tempo informado. Um bip é dado no fone de ouvido e o celular vibra 1 vez.\n" +
+                    "PONTO FINAL. É só isso que precisava e criei. Ahhh...mas tem como selecionar os treinos....medir calorias...passos...gps..." +
+                    "tem outros aplicativos execelentes no google play. Esse criei somente para fazer essa funcionalidade que não encontrei. " +
+                    "Queria medir meus 40 segundos de intervalo, mas eu que queria acionar a contagem. " +
+                    "Não sou um robô e dependendo do dia/exercicio queria ter um tempo maior ou menor para acionar os 40 segundos. " +
+                    "Só isso."
+                    ));
+        }
+
+        btnAtivar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("MainActivity", "clickbotao");
+                long regressividade = 1 * 1000;
+                ContagemRegressiva contagem = new ContagemRegressiva(MainActivity.this, Long.parseLong(timeIntervalo.getText().toString()) * 1000, regressividade);
+
+                MediaPlayer mp = MediaPlayer.create(MainActivity.this, R.raw.sound_inicio);
+                mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+
+                    @Override
+                    public void onCompletion(MediaPlayer mp) {
+
+                        mp.release();
+                    }
+
+                });
+                mp.start();
+                contagem.start();
+
+            }
+        });
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            Log.i("MainActivity", "entrou no novo");
+            MediaSession mediaSession = new MediaSession(this,"fone");
+            Intent mediaButtonIntent = new Intent(Intent.ACTION_MEDIA_BUTTON);
+            mediaButtonIntent.setComponent(new ComponentName(this, RemoteControlClientReceiver.class));
+            PendingIntent mediaPendingIntent = PendingIntent.getBroadcast(this, 0, mediaButtonIntent, 0);
+            mediaSession.setMediaButtonReceiver(mediaPendingIntent);
+            mediaSession.setCallback(new MediaSession.Callback() {
+                String TAG = "teste";
+
+                public boolean onMediaButtonEvent(Intent mediaButtonIntent) {
+
+                    Log.d(TAG, "onMediaButtonEvent called: " + mediaButtonIntent);
+                    return false;
+                }
+
+                public void onPause() {
+                    Log.d(TAG, "onPause called (media button pressed)");
+                    super.onPause();
+                }
+
+                public void onPlay() {
+                    Log.d(TAG, "onPlay called (media button pressed)");
+                    super.onPlay();
+                }
+
+                public void onStop() {
+                    Log.d(TAG, "onStop called (media button pressed)");
+                    super.onStop();
+                }
+            });
+            mediaSession.setFlags(MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS | MediaSession.FLAG_HANDLES_MEDIA_BUTTONS);
+            mediaSession.setActive(true);
+
+        } else {
+            Log.i("MainActivity","entrou no antigo");
+            ((AudioManager) getSystemService(AUDIO_SERVICE)).registerMediaButtonEventReceiver(new ComponentName(
+                    this,
+                    RemoteControlClientReceiver.class));
+        }
+
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        Log.d("MainActivity", "entrou n oonkeyDown"+keyCode);
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_POWER:
+            {
+                Toast.makeText(getBaseContext(), "Power button pressed", Toast.LENGTH_LONG).show();
+                Log.d("MainActivity", "power pressionado 1");
+                return true;
+            }
+            case KeyEvent.KEYCODE_MENU:
+                Toast.makeText(getBaseContext(), "Menu Button Pressed", Toast.LENGTH_LONG).show();
+                Log.d("MainActivity", "power pressionado 2");
+                return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d("MainActivity", "entrou no OnPause");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d("MainActivity", "entrou no Ondestroy");
+        ((AudioManager) getSystemService(AUDIO_SERVICE)).unregisterMediaButtonEventReceiver(new ComponentName(
+                this,
+                RemoteControlClientReceiver.class));
+    }
+}

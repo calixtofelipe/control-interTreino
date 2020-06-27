@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="br.com.savecontroladoria.intervalofone.MainActivity">
+
+    <TextView
+        android:id="@+id/tvManual"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Descritivo conforme manual" />
+
+    <EditText
+        android:id="@+id/timeIntervalo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="@string/timeIntevalo"
+        android:maxLength="2"
+        android:layout_below="@+id/tvManual"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ATIVAR"
+        android:id="@+id/btnAtivar"
+        android:layout_alignBottom="@+id/timeIntervalo"
+        android:layout_toEndOf="@+id/timeIntervalo" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Editar"
+        android:id="@+id/btnEditar"
+        android:layout_alignBottom="@+id/btnAtivar"
+        android:layout_toEndOf="@+id/btnAtivar" />
+</RelativeLayout>
